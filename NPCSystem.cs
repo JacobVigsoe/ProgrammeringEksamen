@@ -9,11 +9,11 @@ public class NPCSystem : MonoBehaviour
     [SerializeField] private GameObject lightLeft;
     [SerializeField] private GameObject lightRight;
 
-    public float laneWidth = 2f;
-    public float laneChangeSpeed = 50f;
-    public int randomLaneStart = -1;
-    public int randomLaneEnd = 3;
-    public LayerMask npcLayer;
+    [SerializeField] private float laneWidth = 2f;
+    [SerializeField] private float laneChangeSpeed = 50f;
+    [SerializeField] private int randomLaneStart = -1;
+    [SerializeField] private int randomLaneEnd = 3;
+    [SerializeField] private LayerMask npcLayer;
 
     private int currentLane = 1;
     private int targetLane = 1;
