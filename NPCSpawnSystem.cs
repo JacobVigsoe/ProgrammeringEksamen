@@ -1,65 +1,56 @@
-using System.Collections;
 using UnityEngine;
+using System.Collections;
 
 public class NPCSpawnSystem : MonoBehaviour
 {
-    public GameObject[] npcPrefabs; // Array of NPC prefabs to spawn
-    //private NPCSystem npcSystem;
-    public Transform[] spawnPoints; // Array of spawn points
+    [SerializeField] private GameObject[] npcPrefabs; // Array of NPC prefabs to spawn
+    [SerializeField] private Transform[] spawnPoints; // Array of spawn points
+    [SerializeField] private Transform playerTransform; // Reference to the player's transform
+    [SerializeField] private float despawnDistance = 50f; // Distance at which road segments are despawned
+    [SerializeField] private float spawnInterval = 2f; // Time interval between spawns
+    [SerializeField] private int maxNPCsToSpawnInDoubleLane = 10; // Maximum number of NPCs to spawn before spawning in double lane
 
-    public Transform playerTransform; // Reference to the player's transform
-    public float despawnDistance = 50f; // Distance at which road segments are despawned
-
-    public float spawnInterval = 2f; // Time interval between spawns
     private float nextSpawnTime; // Time for the next spawn
+    private int spawnedNPCAmount; // Number of NPCs spawned since the last double lane spawn
 
-    public float spawnedNPCAmount = 0;
-
-
-    void Start()
+    private void Start()
     {
-        //npcSystem = GameObject.FindAnyObjectByType<NPCSystem>();
         nextSpawnTime = Time.time + spawnInterval; // Set initial spawn time
     }
 
-    void Update()
+    private void Update()
+    {
+        SpawnNPCs();
+        DespawnOldNPCs();
+    }
+
+    private void SpawnNPCs()
     {
         // Check if it's time to spawn a new NPC
         if (Time.time >= nextSpawnTime)
         {
-            SpawnNPC(); // Spawn a new NPC
+            SpawnSingleNPC(); // Spawn a new NPC
             nextSpawnTime = Time.time + spawnInterval; // Set time for the next spawn
-           
+
+            // Check if the maximum number of NPCs has been reached
+            if (++spawnedNPCAmount >= maxNPCsToSpawnInDoubleLane)
+            {
+                StartCoroutine(SpawnNPCsInDoubleLane());
+            }
         }
-
-        if (spawnedNPCAmount == 10)
-        {
-            StartCoroutine(SpawnNpcDoubleLane());
-
-        }
-
-        // Despawn road segments that are too far behind the player
-        DespawnOldNpc();
     }
 
-    private IEnumerator SpawnNpcDoubleLane()
+    private IEnumerator SpawnNPCsInDoubleLane()
     {
-
-        //npcSystem.randomLane1 = 3;
-        //npcSystem.randomLane2 = 3;
-        SpawnNPC(); // Spawn a new NPC
+        SpawnSingleNPC(); // Spawn a new NPC in the first lane
         yield return new WaitForSeconds(0.1f);
-        //npcSystem.randomLane1 = 2;
-        //npcSystem.randomLane2 = 2;
-        SpawnNPC(); // Spawn a new NPC
-        spawnedNPCAmount = 0;
+        SpawnSingleNPC(); // Spawn a new NPC in the second lane
+        spawnedNPCAmount = 0; // Reset the spawned NPC count
         yield return new WaitForSeconds(0.1f);
-
     }
 
-    void SpawnNPC()
+    private void SpawnSingleNPC()
     {
-        float randomTime = Random.Range(0, 350);
         // Choose a random NPC prefab from the npcPrefabs array
         GameObject npcPrefab = npcPrefabs[Random.Range(0, npcPrefabs.Length)];
 
@@ -67,11 +58,10 @@ public class NPCSpawnSystem : MonoBehaviour
         Transform spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
 
         // Spawn the NPC at the chosen spawn point with a rotation of 180 degrees
-        GameObject spawnedNPC = Instantiate(npcPrefab, spawnPoint.position, Quaternion.Euler(0f, 180f, 0f));
-        spawnedNPCAmount ++;
+        Instantiate(npcPrefab, spawnPoint.position, Quaternion.Euler(0f, 180f, 0f));
     }
 
-    void DespawnOldNpc()
+    private void DespawnOldNPCs()
     {
         // Iterate through all spawned NPCs
         foreach (GameObject npc in GameObject.FindGameObjectsWithTag("NPC"))
@@ -83,5 +73,4 @@ public class NPCSpawnSystem : MonoBehaviour
             }
         }
     }
-
 }
